@@ -296,6 +296,18 @@ public class Estacionamento {
         return true;
     }
 
+    /**
+     * Restaura o estado do estacionamento a partir de dados carregados.
+     * @param vagas Lista de vagas recuperada.
+     * @param tickets Lista de tickets recuperada.
+     * @param proximoIdTicket Próximo ID de ticket recuperado.
+     */
+    public void restaurarEstado(List<Vaga> vagas, List<Ticket> tickets, int proximoIdTicket) {
+        this.vagas = new ArrayList<>(vagas);
+        this.tickets = new ArrayList<>(tickets);
+        this.proximoIdTicket = proximoIdTicket;
+    }
+
     @Override
     public String toString() {
         return String.format("Estacionamento '%s' - Vagas: %d (Livres: %d, Ocupadas: %d) - Valor/h: R$ %.2f",
