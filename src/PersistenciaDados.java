@@ -61,22 +61,90 @@ public class PersistenciaDados {
      * Exporta um relatório do estacionamento para o formato especificado.
      * @param est O estacionamento.
      * @param formato O formato desejado ("TXT", "EXCEL", "PDF").
+     * @return O caminho absoluto do arquivo gerado.
      * @throws IOException Se ocorrer erro na exportação.
      */
-    public static void exportarRelatorio(Estacionamento est, String formato) throws IOException {
+    public static String exportarRelatorio(Estacionamento est, String formato) throws IOException {
+        // Cria diretório de relatórios se não existir
+        File dirRelatorios = new File("relatorios");
+        if (!dirRelatorios.exists()) {
+            dirRelatorios.mkdirs();
+        }
+
         String nomeArquivo = "relatorio_" + System.currentTimeMillis();
+        String caminhoArquivo = "";
         
         switch (formato.toUpperCase()) {
             case "TXT":
-                exportarTXT(est, nomeArquivo + ".txt");
+                caminhoArquivo = new File(dirRelatorios, nomeArquivo + ".txt").getPath();
+                exportarTXT(est, caminhoArquivo);
                 break;
             case "EXCEL":
-                exportarCSV(est, nomeArquivo + ".csv");
+                caminhoArquivo = new File(dirRelatorios, nomeArquivo + ".csv").getPath();
+                exportarCSV(est, caminhoArquivo);
                 break;
             case "PDF":
-                throw new IOException("Exportação para PDF requer biblioteca externa (ex: iText) não configurada.");
+                // Como não temos biblioteca de PDF, exportamos para HTML que pode ser impresso/salvo como PDF
+                caminhoArquivo = new File(dirRelatorios, nomeArquivo + ".html").getPath();
+                exportarHTML(est, caminhoArquivo);
+                break;
             default:
                 throw new IllegalArgumentException("Formato não suportado: " + formato);
+        }
+        return new File(caminhoArquivo).getAbsolutePath();
+    }
+
+    private static void exportarHTML(Estacionamento est, String arquivo) throws IOException {
+        try (PrintWriter out = new PrintWriter(new FileWriter(arquivo))) {
+            out.println("<html><head><title>Relatório de Estacionamento</title>");
+            out.println("<style>");
+            out.println("body{font-family: Arial, sans-serif; margin: 20px;}");
+            out.println("table{width: 100%; border-collapse: collapse; margin-top: 20px;}");
+            out.println("th, td{border: 1px solid #ddd; padding: 8px; text-align: left;}");
+            out.println("th{background-color: #f2f2f2;}");
+            out.println(".header{margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;}");
+            out.println("</style>");
+            out.println("</head><body>");
+            
+            out.println("<div class='header'>");
+            out.println("<h1>Relatório de Estacionamento: " + est.getNome() + "</h1>");
+            out.println("<p><strong>Data de Emissão:</strong> " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "</p>");
+            out.println("</div>");
+            
+            out.println("<h2>Resumo Operacional</h2>");
+            out.println("<ul>");
+            out.println("<li><strong>Vagas Totais:</strong> " + est.getVagas().size() + "</li>");
+            out.println("<li><strong>Vagas Ocupadas:</strong> " + est.getVagasOcupadas() + "</li>");
+            out.println("<li><strong>Vagas Livres:</strong> " + est.getVagasLivres() + "</li>");
+            out.println("</ul>");
+
+            out.println("<h2>Histórico de Tickets</h2>");
+            out.println("<table>");
+            out.println("<tr><th>ID</th><th>Placa</th><th>Veículo</th><th>Entrada</th><th>Saída</th><th>Valor Pago</th><th>Status</th></tr>");
+            
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            for (Ticket t : est.getTickets()) {
+                String saida = (t.getHoraSaida() != null) ? t.getHoraSaida().format(fmt) : "-";
+                String status = (t.getHoraSaida() != null) ? "FECHADO" : "ABERTO";
+                String valor = String.format("R$ %.2f", t.getValorPago());
+                
+                out.println("<tr>");
+                out.println("<td>" + t.getId() + "</td>");
+                out.println("<td>" + t.getVeiculo().getPlaca() + "</td>");
+                out.println("<td>" + t.getVeiculo().getModelo() + " (" + t.getVeiculo().getCor() + ")</td>");
+                out.println("<td>" + t.getHoraEntrada().format(fmt) + "</td>");
+                out.println("<td>" + saida + "</td>");
+                out.println("<td>" + valor + "</td>");
+                out.println("<td>" + status + "</td>");
+                out.println("</tr>");
+            }
+            out.println("</table>");
+            
+            out.println("<div style='margin-top: 30px; font-size: 0.8em; color: #666;'>");
+            out.println("<p>Sistema de Estacionamento - Gerado automaticamente.</p>");
+            out.println("</div>");
+            
+            out.println("</body></html>");
         }
     }
 

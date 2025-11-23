@@ -102,19 +102,26 @@ public class PainelControles extends JPanel {
     }
 
     private void gerarRelatorio() {
-        // Redireciona a saída do console para uma janela ou apenas avisa que foi gerado no console
-        estacionamento.gerarRelatorio();
-        JOptionPane.showMessageDialog(this, 
-            "Relatório gerado no console do sistema.", 
-            "Relatório", 
-            JOptionPane.INFORMATION_MESSAGE);
+        try {
+            String caminho = PersistenciaDados.exportarRelatorio(estacionamento, "TXT");
+            JOptionPane.showMessageDialog(this, 
+                "Relatório completo salvo com sucesso!\nLocal: " + caminho, 
+                "Relatório Gerado", 
+                JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao gerar relatório: " + e.getMessage(), 
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void mostrarConfiguracoes() {
-        JOptionPane.showMessageDialog(this, 
-            "Funcionalidade de configurações em desenvolvimento.", 
-            "Configurações", 
-            JOptionPane.INFORMATION_MESSAGE);
+        Frame parent = (Frame) SwingUtilities.getWindowAncestor(this);
+        DialogoConfiguracoes config = new DialogoConfiguracoes(parent, estacionamento);
+        config.setVisible(true);
+        // Após fechar, podemos forçar atualização se necessário
+        atualizarEstatisticas();
     }
 
     private void limparHistorico() {

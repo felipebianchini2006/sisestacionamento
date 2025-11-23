@@ -1,6 +1,8 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -61,9 +63,9 @@ public class TelaRelatorio extends JFrame {
         JButton btnImprimir = new JButton("Imprimir");
         JButton btnAtualizar = new JButton("Atualizar");
 
-        btnExportarPDF.addActionListener(e -> mostrarMensagem("Exportar PDF"));
-        btnExportarExcel.addActionListener(e -> mostrarMensagem("Exportar Excel"));
-        btnImprimir.addActionListener(e -> mostrarMensagem("Imprimir"));
+        btnExportarPDF.addActionListener(e -> exportarArquivo("PDF"));
+        btnExportarExcel.addActionListener(e -> exportarArquivo("EXCEL"));
+        btnImprimir.addActionListener(e -> imprimirRelatorio());
         btnAtualizar.addActionListener(e -> atualizarDados());
 
         painelBotoes.add(btnExportarPDF);
@@ -77,8 +79,43 @@ public class TelaRelatorio extends JFrame {
         atualizarDados();
     }
 
-    private void mostrarMensagem(String acao) {
-        JOptionPane.showMessageDialog(this, "Funcionalidade '" + acao + "' em desenvolvimento.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+    private void exportarArquivo(String formato) {
+        try {
+            String caminho = PersistenciaDados.exportarRelatorio(estacionamento, formato);
+            String msg = "Relatório " + formato + " exportado com sucesso!\nLocal: " + caminho;
+            if (formato.equals("PDF")) {
+                msg += "\n\n(O arquivo HTML foi gerado. Abra no navegador e use 'Imprimir > Salvar como PDF')";
+            }
+            
+            int op = JOptionPane.showConfirmDialog(this, msg + "\n\nDeseja abrir o arquivo agora?", "Sucesso", JOptionPane.YES_NO_OPTION);
+            
+            if (op == JOptionPane.YES_OPTION) {
+                try {
+                    Desktop.getDesktop().open(new File(caminho));
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Não foi possível abrir o arquivo automaticamente.", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao exportar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void imprimirRelatorio() {
+        try {
+            // Imprime a tabela de histórico
+            boolean complete = tabelaHistorico.print(JTable.PrintMode.FIT_WIDTH, 
+                new java.text.MessageFormat("Relatório de Estacionamento - " + estacionamento.getNome()),
+                new java.text.MessageFormat("Página - {0}"));
+            
+            if (complete) {
+                JOptionPane.showMessageDialog(this, "Impressão concluída!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Impressão cancelada.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao imprimir: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void atualizarDados() {

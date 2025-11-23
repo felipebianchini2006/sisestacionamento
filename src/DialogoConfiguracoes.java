@@ -126,6 +126,9 @@ public class DialogoConfiguracoes extends JDialog {
         props.setProperty("corOcupada", String.valueOf(btnCorOcupada.getBackground().getRGB()));
         props.setProperty("corVip", String.valueOf(btnCorVip.getBackground().getRGB()));
 
+        // Atualiza o modelo em tempo real
+        estacionamento.setValorHora((Double) spinValorHora.getValue());
+
         try (FileOutputStream out = new FileOutputStream(CONFIG_FILE)) {
             props.store(out, "Configurações do Sistema de Estacionamento");
             JOptionPane.showMessageDialog(this, "Configurações salvas com sucesso!\nReinicie o sistema para aplicar alterações estruturais (como qtd de vagas).");

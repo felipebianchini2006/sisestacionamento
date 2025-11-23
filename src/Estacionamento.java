@@ -88,6 +88,13 @@ public class Estacionamento {
         return valorHora;
     }
 
+    public void setValorHora(double valorHora) {
+        if (valorHora < 0) {
+            throw new IllegalArgumentException("O valor por hora não pode ser negativo.");
+        }
+        this.valorHora = valorHora;
+    }
+
     public List<Vaga> getVagas() {
         return Collections.unmodifiableList(vagas);
     }
